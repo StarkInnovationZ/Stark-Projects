@@ -11,8 +11,8 @@
 #include <ArduinoJson.h>
 
 /* ── Credentials ───────────────────────────────────────── */
-const char* WIFI_SSID  = "Zigzag Network Wifi";
-const char* WIFI_PASS  = "Zigzag @ 16";
+const char* WIFI_SSID = "Stark_InnovatioZ"; 
+const char* WIFI_PASS = "123456789";
 
 const char* TG_TOKEN   = "YOUR_BOT_TOKEN_HERE";
 const char* TG_CHAT_ID = "YOUR_CHAT_ID_HERE";
