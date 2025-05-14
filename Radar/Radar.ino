@@ -1,72 +1,64 @@
+/*
+  Project     : Ultrasonic_Radar
+  Board       : Arduino Uno / Nano
+  Sensor      : HC-SR04  (Trig=D5, Echo=D6)
+  Servo       : SG90     (Signal=D8)
+  Author      : Stark InnovationZ
+  Description : Sweeps 0–180° measuring distance and streams angle,cm over serial.
+  License     : MIT
+*/
+
 #include <Servo.h>
 
-// Define ultrasonic sensor and motor pins
-#define trigPin 5
-#define echoPin 6
-#define servoPin 8
+/* ── Pin map ─────────────────────────────────────────── */
+#define TRIG_PIN 5
+#define ECHO_PIN 6
+#define SERVO_PIN 8
 
-float duration; // Travel time in microseconds
-float distance; // Distance in centimeters
-int angle; // Position of the servo motor
+float duration;      // μs
+float distance;      // cm
+int   angle;         // current sweep angle
+Servo servoMotor;
 
-Servo servoMotor; // Create servoMotor object
-
+/* ── Setup ───────────────────────────────────────────── */
 void setup() {
-  pinMode(trigPin, OUTPUT); // Trig
-  pinMode(echoPin, INPUT); // Echo
-  servoMotor.attach(servoPin); // Servo motor
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  servoMotor.attach(SERVO_PIN);
   Serial.begin(9600);
 }
 
+/* ── Main loop ───────────────────────────────────────── */
 void loop() {
-
-  // Rotate 0 to 180 degrees
-  for (angle = 0; angle <= 180; angle++) { // Increase by 1 degree
+  // Sweep 0 → 180
+  for (angle = 0; angle <= 180; angle++) {
     servoMotor.write(angle);
     delay(30);
-    calculateDistance(angle);
-    if (angle % 2 == 0) // Display data for angles in increments of 2
-      displayData();
+    calculateDistance();
+    if (!(angle & 1))            // print every 2°
+      Serial.printf("%d,%.1f\n", angle, distance);
   }
-  // Rotate 180 to 0 degrees
-  for (angle = 180; angle >= 0; angle--) { // Decrease by 1 degree
+  // Sweep 180 → 0
+  for (angle = 180; angle >= 0; angle--) {
     servoMotor.write(angle);
     delay(30);
-    calculateDistance(angle);
-    if (angle % 2 == 0) // Display data for angles in increments of 2
-      displayData();
+    calculateDistance();
+    if (!(angle & 1))
+      Serial.printf("%d,%.1f\n", angle, distance);
   }
-
 }
 
-// Calculate distance
-float calculateDistance(int angle) {
-
-  // Clear trigPin
-  digitalWrite(trigPin, LOW);
+/* ── Measure distance ───────────────────────────────── */
+void calculateDistance() {
+  digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
-
-  // Turn on trigPin for 10 microseconds
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
+  digitalWrite(TRIG_PIN, LOW);
 
-  // Duration in microseconds
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(ECHO_PIN, HIGH, 30000);        // 30 ms timeout
+  distance = duration * 0.0343 / 2;                 // cm
 
-  // Calculate distance
-  distance = duration * (0.0343) / 2; // Duration in microseconds multiplied by speed of sound in cm/μs divided by 2
-
-  // Distance is set to 0 when the sensor is unreadable
-  if (distance >= 400 || distance <= 3) {
+  if (distance < 3 || distance > 400)               // invalid range
     distance = 0;
-  }
-
-}
-
-// Display data
-void displayData() {
-  Serial.print(angle); // Display angle
-  Serial.print(",");
-  Serial.println(distance); // Display distance (cm)
 }
