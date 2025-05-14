@@ -1,45 +1,44 @@
-/*****************************************************************
- *  ESP32  •  Simple Smoke Detector
- *  --------------------------------
- *  Smoke sensor  AO   → GPIO 34   (ADC1_CH6)  *input only*
- *  Buzzer / LED  → GPIO 23        (any output-capable pin)
- *  5 V and GND   → sensor VCC / GND
- *****************************************************************/
-const int PIN_SMOKE  = 34;    // analog input
-const int PIN_ALARM  = 2;    // buzzer or LED
+/*
+  Project     : Smoke_Detector
+  Board       : ESP32-DevKit v1
+  Sensor      : MQ-series smoke/gas (AO → GPIO 34)
+  Alarm       : Buzzer or LED (GPIO 2)
+  Author      : Stark InnovationZ
+  Description : Triggers an alarm when smoke level crosses a threshold.
+  License     : MIT
+*/
 
-/* ---------- calibration --------------------------------------- */
-const int  ADC_MAX      = 4095;      // 12-bit ADC
-const int  THRESH_RAW   = 1500;      // trip point  (≈1.6 V)
-const int  HYSTERESIS   = 100;       //  ↓ prevents rapid on/off
+const int PIN_SMOKE  = 34;   // analog-only input
+const int PIN_ALARM  = 2;    // buzzer / LED (active-HIGH)
 
-/* ---------- globals ------------------------------------------- */
+/* ── calibration ────────────────────────────────────────── */
+const int ADC_MAX    = 4095;   // 12-bit ADC
+const int THRESH_RAW = 1500;   // trip point (≈1.6 V)
+const int HYSTERESIS = 100;    // prevents chatter
+
 bool alarmActive = false;
 
-void setup()
-{
+void setup() {
   pinMode(PIN_ALARM, OUTPUT);
-  analogReadResolution(12);          // 0-4095
+  analogReadResolution(12);      // 0-4095
   Serial.begin(115200);
   Serial.println("Smoke detector ready");
 }
 
-void loop()
-{
-  int raw = analogRead(PIN_SMOKE);   // read sensor
+void loop() {
+  int raw = analogRead(PIN_SMOKE);
   Serial.printf("ADC: %d\r\n", raw);
 
-  /* simple on/off with hysteresis */
   if (!alarmActive && raw > THRESH_RAW + HYSTERESIS) {
     alarmActive = true;
-    digitalWrite(PIN_ALARM, HIGH);   // turn buzzer/LED on
+    digitalWrite(PIN_ALARM, HIGH);
     Serial.println("!!! SMOKE DETECTED !!!");
   }
   else if (alarmActive && raw < THRESH_RAW - HYSTERESIS) {
     alarmActive = false;
-    digitalWrite(PIN_ALARM, LOW);    // clear alarm
+    digitalWrite(PIN_ALARM, LOW);
     Serial.println("Smoke cleared");
   }
 
-  delay(200);                        // 5 Hz sampling
+  delay(200);                    // 5 Hz sampling
 }
