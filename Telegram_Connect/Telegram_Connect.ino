@@ -1,14 +1,23 @@
+/*
+  Project     : Telegram_Connect
+  Board       : ESP32-DevKit v1
+  Purpose     : Send the ESP32’s local IP to a Telegram chat on boot.
+  Author      : Stark InnovationZ
+  License     : MIT
+*/
+
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 
-/* ───────────────────────  USER CONFIG  ─────────────────────── */
+/* ── USER CONFIG ──────────────────────────────────────── */
 const char* WIFI_SSID  = "Zigzag Network Wifi";
 const char* WIFI_PASS  = "Zigzag @ 16";
 
-const char* TG_TOKEN   = "8088547098:AAEgt1zFoVj30-zLV6fn4kV1TaERy_W9UYE";
-const char* TG_CHAT_ID = "1480524595";
+const char* TG_TOKEN   = "YOUR_BOT_TOKEN_HERE";
+const char* TG_CHAT_ID = "YOUR_CHAT_ID_HERE";
 
+/* ─────────────────────────────────────────────────────── */
 void setup() {
   Serial.begin(115200);
   delay(300);
@@ -22,28 +31,28 @@ void setup() {
     Serial.print('.'); delay(500);
   }
   Serial.println();
-  
+
   if (WiFi.isConnected()) {
     Serial.print("IP: "); Serial.println(WiFi.localIP());
-    task_sendIPtoTelegram();
+    sendIPtoTelegram();
   } else {
     Serial.println("Wi-Fi failed");
   }
 }
 
 void loop() {
-  // Main program loop
+  // add reconnection logic or other tasks here
 }
 
-/* ───────────────────  Send IP to Telegram  ─────────────────── */
-void task_sendIPtoTelegram() {
+/* ── Send IP to Telegram ─────────────────────────────── */
+void sendIPtoTelegram() {
   String url = "https://api.telegram.org/bot" + String(TG_TOKEN) +
                "/sendMessage?chat_id=" + TG_CHAT_ID +
                "&text=ESP32%20IP%3A%20" + WiFi.localIP().toString();
-               
-  WiFiClientSecure cli; 
-  cli.setInsecure(); // Bypass SSL verification (not recommended for production)
-  
+
+  WiFiClientSecure cli;
+  cli.setInsecure();            // skip SSL certificate validation (quick demo)
+
   HTTPClient https;
   if (https.begin(cli, url)) {
     int code = https.GET();
