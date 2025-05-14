@@ -1,23 +1,26 @@
 /*
-  ESP32 Wi-Fi LED Switch (Station mode)
-  ------------------------------------
-  • Browse to http://<ESP32_IP>/   → control page
-  • GET  /on   → turn LED ON   (responds “LED is ON”)
-  • GET  /off  → turn LED OFF  (responds “LED is OFF”)
-
-  Tested with Arduino-ESP32 core ≥2.0.7
+  Project     : WEB_LED
+  Board       : ESP32-DevKit v1
+  Purpose     : HTTP LED switch (station mode)
+  Author      : Stark InnovationZ
+  License     : MIT
+  Notes       : Browse http://<ESP32_IP>/   → ON / OFF buttons
+                GET /on  → “LED is ON”
+                GET /off → “LED is OFF”
+                Tested with Arduino-ESP32 core ≥ 2.0.7
 */
 
 #include <WiFi.h>
 #include <WebServer.h>
 
+/* ── User config ─────────────────────────────────────── */
 constexpr char  WIFI_SSID[] = "VENKAT";
 constexpr char  WIFI_PASS[] = "JAYANTHI";
-constexpr uint8_t LED_PIN   = 2;          // On-board LED on many ESP32 dev-kits
+constexpr uint8_t LED_PIN   = 2;           // change if needed
 
 WebServer server(80);
 
-/* ---------- HTML control page ---------------------------------- */
+/* ── HTML page ───────────────────────────────────────── */
 const char* HTML_PAGE = R"rawliteral(
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><title>ESP32 LED</title>
@@ -33,38 +36,30 @@ const char* HTML_PAGE = R"rawliteral(
  <button class="off" onclick="fetch('/off')">OFF</button>
 </body></html>)rawliteral";
 
-/* ---------- Handlers ------------------------------------------- */
-void handleRoot()          { server.send(200, "text/html", HTML_PAGE); }
-void handleOn()  {
-  digitalWrite(LED_PIN, HIGH);
-  server.send(200, "text/plain", "LED is ON");
-}
-void handleOff() {
-  digitalWrite(LED_PIN, LOW);
-  server.send(200, "text/plain", "LED is OFF");
-}
+/* ── Handlers ────────────────────────────────────────── */
+void handleRoot() { server.send(200, "text/html", HTML_PAGE); }
+void handleOn()   { digitalWrite(LED_PIN, HIGH); server.send(200, "text/plain", "LED is ON"); }
+void handleOff()  { digitalWrite(LED_PIN, LOW);  server.send(200, "text/plain", "LED is OFF"); }
 
+/* ── Setup ───────────────────────────────────────────── */
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
   Serial.begin(115200);
-  Serial.println(F("\nConnecting to Wi-Fi…"));
+  Serial.println("\nConnecting to Wi-Fi…");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(300);
-    Serial.print('.');
-  }
+  while (WiFi.status() != WL_CONNECTED) { delay(300); Serial.print('.'); }
   Serial.printf("\nConnected!  IP = %s\n", WiFi.localIP().toString().c_str());
 
-  /* Register endpoints */
-  server.on("/",  handleRoot);
+  server.on("/", handleRoot);
   server.on("/on",  HTTP_GET, handleOn);
   server.on("/off", HTTP_GET, handleOff);
   server.begin();
   Serial.println("HTTP server started");
 }
 
+/* ── Main loop ───────────────────────────────────────── */
 void loop() {
   server.handleClient();
 }
