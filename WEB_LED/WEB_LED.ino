@@ -14,8 +14,8 @@
 #include <WebServer.h>
 
 /* ── User config ─────────────────────────────────────── */
-constexpr char  WIFI_SSID[] = "VENKAT";
-constexpr char  WIFI_PASS[] = "JAYANTHI";
+constexpr char  WIFI_SSID[] = "Stark_InnovatioZ"; 
+constexpr char  WIFI_PASS[] = "123456789";
 constexpr uint8_t LED_PIN   = 2;           // change if needed
 
 WebServer server(80);
