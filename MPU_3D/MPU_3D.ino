@@ -1,29 +1,31 @@
-/******************************************************************
- *  MPU-6050  →  Serial “yaw,pitch,roll” @ 115 200 baud
- *  Library  :  https://github.com/tockn/MPU6050_tockn
- *  Wiring   :  VCC-3V3  GND-GND  SDA-A4(GPIO 21 on ESP32)  SCL-A5(GPIO 22)
- ******************************************************************/
+/*
+  Project     : MPU_3D Orientation Visualiser
+  Board       : ESP32-DevKit v1
+  Sensor      : MPU-6050 (I²C)
+  Author      : Stark InnovationZ
+  Description : Streams yaw-pitch-roll as CSV @115 200 baud for a VPython demo.
+  License     : MIT
+*/
+
 #include <Wire.h>
 #include "MPU6050_tockn.h"
 
 MPU6050 mpu(Wire);
 
-// Offsets to store initial orientation
-float yaw_offset = 0;
+// Offsets captured at startup
+float yaw_offset   = 0;
 float pitch_offset = 0;
-float roll_offset = 0;
+float roll_offset  = 0;
 
 void setup() {
   Serial.begin(115200);
   Wire.begin();
   mpu.begin();
-  mpu.calcGyroOffsets(true);  // place still for 3 seconds
+  mpu.calcGyroOffsets(true);   // keep the board still for ~3 s
 
-  // Wait a moment for stable values
-  delay(1000);
+  delay(1000);                 // let values stabilise
   mpu.update();
 
-  // Store initial orientation as offset
   yaw_offset   = mpu.getAngleZ();
   pitch_offset = mpu.getAngleX();
   roll_offset  = mpu.getAngleY();
@@ -32,11 +34,10 @@ void setup() {
 void loop() {
   mpu.update();
 
-  // Subtract offsets to make initial position 0,0,0
   float yaw   = mpu.getAngleZ() - yaw_offset;
   float pitch = mpu.getAngleX() - pitch_offset;
   float roll  = mpu.getAngleY() - roll_offset;
 
   Serial.printf("%.2f,%.2f,%.2f\n", yaw, pitch, roll);
-  delay(10);  // ~100Hz
+  delay(10);                   // ≈100 Hz
 }
